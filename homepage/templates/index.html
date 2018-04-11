@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <style>canvas { width: 100%; height: 100% }</style>
+    <link rel="stylesheet" href="/static/css/bootstrap.css">
+    <link rel="stylesheet" href="/static/css/highcharts.css">
+    <link rel="stylesheet" href="/static/css/bootstrap-slider.css">
+    <script src="/static/js/three.js"></script>
+    <script src="/static/js/VTKLoader.js"></script>
+    <script src="/static/js/TrackballControls.js"></script>
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
+    <script src="/static/js/bootstrap-slider.js"></script>
+    <script src="/static/js/highcharts.js"></script>
+</head>
+<body onload="onload()">
+  <div class="container" id="whole-container" style="padding-right:0px;padding-left:0px;margin-left:0px;margin-right:0px;">
+    <div class="row" style="">
+      <div class="col-sm-9">
+	<div class="container" id="canvas-container" style="padding-right:0px;padding-left:0px;margin-left:0px;margin-right:0px;">
+	  <div class="row">
+	    <div class="col-sm-12" id="canvas">
+	    </div>
+	  </div>
+	  <div class="row">
+	    <div class="col-sm-12" id="function">
+	    </div>
+	  </div>  
+	</div>  
+      </div>
+      <div class="col-sm-3">
+	<div class="container" id="control-container">
+	  <div class="row" style="margin-top:17px">
+            <div class="btn-group btn-group-lg">
+	      <button type="button" class="btn btn-default">SIMULATION</button>
+	      <button type="button" class="btn btn-default">INVERSE ENGINEERING</button>
+	    </div>
+	  </div>
+	  <div id="chamber-ctrl-panel">
+	  </div>
+	</div>  
+      </div>
+    </div>
+  </div>
+</body>
+<script src="/static/js/index.js"></script>
+<script type="text/javascript">
+  $(function () { 
+    var myChart = Highcharts.chart('function', {
+        chart: {
+            type: 'bar'
+        },
+        title: {
+            text: 'Fruit Consumption'
+        },
+        xAxis: {
+            categories: ['Apples', 'Bananas', 'Oranges']
+        },
+        yAxis: {
+            title: {
+                text: 'Fruit eaten'
+            }
+        },
+        series: [{
+            name: 'Jane',
+            data: [1, 0, 4],
+        }, {
+            name: 'John',
+            data: [5, 7, 3],
+        }]
+  });
+});
+</script>
+</html>
