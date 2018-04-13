@@ -19,5 +19,6 @@ from homepage import views as homepage_views
 
 urlpatterns = [
     path('', homepage_views.index),
+    path('upload_model/', homepage_views.upload_model),
     path('admin/', admin.site.urls),
 ]

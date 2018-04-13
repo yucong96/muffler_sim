@@ -37,8 +37,18 @@
 	      <button type="button" class="btn btn-default">INVERSE ENGINEERING</button>
 	    </div>
 	  </div>
-	  <div id="chamber-ctrl-panel">
+	  <div class="row">
+	    <div class="col-sm-4">
+	      <h3>Max Mesh Size</h3>
+	    </div>
+	    <div class="col-sm-8"  style="margin-top:13px">
+	      <input id="slider-max-mesh-size" data-slider-id="slider-max-mesh-size" type="text" data-slider-min="0.008" data-slider-max="0.02" data-slider-step="0.001" data-slider-value="0.01"/>
+	    </div>  
 	  </div>
+	  <div id="chamber-ctrl-panel"></div>
+	  <div class="row">
+	    <button id="apply-btn" type="button" class="btn btn-default btn-block">APPLY</button>
+	  </div>  
 	</div>  
       </div>
     </div>
