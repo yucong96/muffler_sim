@@ -1,0 +1,79 @@
+#include "CoeffMatrix.h"
+
+#include <iostream>
+#include <map>
+#include <assert.h>
+
+#include <Eigen/SparseCholesky>
+#include <Eigen/SparseLU>
+
+using namespace std;
+using namespace Eigen;
+
+void CoeffMatrix::computeEquationNum(const vector<ElementType>& f_type, const vector<ElementType>& n_type) {
+
+#ifdef TEST_LAPLACE
+  eq_num = 7;
+  return;
+#endif
+  
+  for (int i = 0; i < f_type.size(); i++) {
+    if (f_type[i] == OUTLET) { // || f_type[i] == HARD) { // || f_type[i] == INLET) {
+      eq_num++;
+    } 
+  }
+  
+  for (int i = 0; i < n_type.size(); i++) {
+    if (n_type[i] == INNER || n_type[i] == HARD || n_type[i] == INLET) {
+      eq_num++;
+    }
+    if (n_type[i] == INLET) {
+      eq_num++;
+    }
+  }
+}
+
+void CoeffMatrix::init(const vector<ElementType>& f_type, const vector<ElementType>& n_type) {
+	computeEquationNum(f_type, n_type);
+	coeff_mat = SparseMatrix<double, Eigen::RowMajor>(eq_num * rate, n_type.size() * rate); // 2 for complex number
+	cout << "The SparseMatrix is " << eq_num * rate << " * " << n_type.size() * rate << endl;
+	coeff_b.resize(eq_num * rate);
+}
+
+void CoeffMatrix::put(const CoeffItem& item) {
+  assert(now_eq_num < eq_num * rate);
+  int i = 0;
+  for (map<NodeIndex, double>::const_iterator iter = item.coeff.begin(); iter != item.coeff.end(); iter++) {
+    coeff_mat.coeffRef(now_eq_num, iter->first) = iter->second;
+    i++;
+  }
+  coeff_b(now_eq_num) = item.constant;
+	now_eq_num++;
+}
+
+void CoeffMatrix::solve(VectorXd& x) {
+  SparseMatrix<double, RowMajor> A = coeff_mat.transpose() * coeff_mat;
+  VectorXd b = coeff_mat.transpose() * coeff_b;
+#ifdef TEST
+  cout << "A = " << A.rows() << "*" << A.cols() << endl;
+  cout << "b = " << b.rows() << "*" << b.cols() << endl;
+#endif
+  SimplicialLDLT<SparseMatrix<double>> solver;
+  //SparseLU<SparseMatrix<double, RowMajor> > solver; 
+  solver.compute(A);
+  assert(solver.info() == Success);
+#ifdef LOG
+  cout << "solver.compute() finish" << endl;
+#endif
+  x = solver.solve(coeff_mat.transpose() * coeff_b);
+  assert(solver.info() == Success);
+#ifdef LOG
+  cout << "solver.solve() finish" << endl;
+#endif
+
+#ifdef TEST
+  VectorXd error = coeff_mat * x - coeff_b;
+  cout << "Error: " << error.norm() << endl;
+#endif
+
+}

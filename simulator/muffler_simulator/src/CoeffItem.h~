@@ -1,0 +1,38 @@
+#ifndef __COEFFITEM_H__
+#define __COEFFITEM_H__
+
+#include "Config.h"
+#include "Object.h"
+#include "UtilTools.h"
+
+#include <map>
+#include <set>
+#include <vector>
+
+class CoeffItem {
+private:
+  UtilTools& utiltools;
+  int n_num;
+  std::map<NodeIndex, double> coeff;
+  double constant;
+
+private:
+  void insert(NodeIndex n, double coefficient);
+  void insert(NodeIndex n, double coefficient, const int flag);
+
+ public:
+  friend class CoeffMatrix;
+  CoeffItem(const int _node_num, UtilTools& _utiltools);
+  void clear();
+  void gradient_dot_norm(const Volume &v, const Face &surf_f,
+                         const double multiplier, const int flag = REAL);
+  void average(const Volume &v, const double multiplier, const int flag = REAL);
+  void laplace(const std::vector<Volume> &v_set, const std::vector<Face> &f_set,
+               const std::vector< std::set<VolumeIndex> > &ring_1_v,
+               const std::vector< std::set<FaceIndex> > &ring_1_f,
+               const NodeIndex &n, const double multiplier, const int flag = REAL);
+  void own(const NodeIndex& n, const double multiplier, const int flag = REAL);
+  void constance(const double _constant);
+};
+
+#endif

@@ -1,0 +1,15 @@
+# This is the default config file for muffler
+
+freq_start: 500
+freq_end: 1501
+freq_step: 50
+speed: 340
+rho: 1.29
+inlet: 0 1 0 0
+outlet: 0 1 0 -0.3
+test_num: 1
+inlet_particle_velocity_or_p0_real:  1.0
+outlet_particle_velocity_or_p0_imag: 0.0
+
+end
+# END

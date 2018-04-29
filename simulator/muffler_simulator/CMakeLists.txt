@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.5)
+
+PROJECT(MUFFLER)
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+FIND_PACKAGE(Eigen3 3.3 REQUIRED NO_MODULE)
+INCLUDE_DIRECTORIES(./third_party/spectra-0.6.1/include)
+
+ADD_SUBDIRECTORY(src bin)

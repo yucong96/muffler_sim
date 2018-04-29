@@ -3,3 +3,6 @@ db.sqlite3
 homepage/static/model
 */*~
 */*#
+simulator/muffler_simulator/build/
+simulator/muffler_simulator/tet/
+simulator/muffler_simulator/log/
