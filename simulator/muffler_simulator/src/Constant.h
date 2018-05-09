@@ -20,7 +20,7 @@ const int AREA_NORMALIZE = 0;
 const int UNIT_NORMALIZE = 1;
 
 //#define TEST
-//#define LOG
+#define LOG
 #define LINUX
 // #define WINDOWS
 

@@ -30,26 +30,15 @@ void checkError(const std::string comment) {
 
 int main(int argc, char *argv[]) {
 
-  if (argc != 2) {
+  if (argc != 4) {
     err = ERR_WRONG_ARG_NUMBER;
   }
   checkError("argument");
 
-  std::string model_name(argv[1]);
+  std::string config_file(argv[1]);
+  std::string model_file(argv[2]);
+  std::string output_model_file(argv[3]);
 
-#ifdef WINDOWS
-  std::string config_file = "..\\config\\config.txt";
-  std::string model_file = "..\\tet\\muffler.vtk";
-  std::string output_model_file = "..\\file\\output_muffler.vtk";
-#endif
-
-#ifdef LINUX
-  std::string config_file = "../../config/config.txt";
-  std::string model_file = "../../tet/" + model_name + ".vtk";
-  std::string output_model_file = "../../output/" + model_name;
-#endif
-
-  // pipeline(default_config_file, config_file, model_file, output_model_file);
   Simulator sim;
   sim.simulate(config_file, model_file, output_model_file);
 

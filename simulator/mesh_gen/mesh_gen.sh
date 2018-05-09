@@ -1,8 +1,19 @@
 #!/bin/bash
 
-MODEL_NAME=${1}
-./geo_gen ./geo_config/${MODEL_NAME}.txt ./geo/${MODEL_NAME}.geo
-netgen -geofile=./geo/${MODEL_NAME}.geo -meshfile=./vol/${MODEL_NAME}.vol -batchmode
-./vol2vtk ./vol/${MODEL_NAME}.vol ./vtk/${MODEL_NAME}.vtk
+PROJECT_PATH=/home/jchen/Documents/project/project_test/django/muffler_sim
 
+CONFIG_PATH=${PROJECT_PATH}/simulator/config
+MESH_PATH=${PROJECT_PATH}/simulator/mesh
+MESHGEN_PATH=${PROJECT_PATH}/simulator/mesh_gen
+
+MODEL_NAME=${1}
+GEO_CONFIG_PATH=${CONFIG_PATH}/${MODEL_NAME}.txt
+GEO_PATH=${MESHGEN_PATH}/geo/${MODEL_NAME}.geo
+VOL_PATH=${MESHGEN_PATH}/vol/${MODEL_NAME}.vol
+VTK_PATH=${MESH_PATH}/${MODEL_NAME}.vtk
+
+echo ${GEO_CONFIG_PATH}
+${MESHGEN_PATH}/geo_gen ${GEO_CONFIG_PATH} ${GEO_PATH}
+netgen -geofile=${GEO_PATH} -meshfile=${VOL_PATH} -batchmode
+${MESHGEN_PATH}/vol2vtk ${VOL_PATH} ${VTK_PATH}
 

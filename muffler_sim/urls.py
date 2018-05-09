@@ -19,6 +19,7 @@ from homepage import views as homepage_views
 
 urlpatterns = [
     path('', homepage_views.index),
-    path('upload_model/', homepage_views.upload_model),
+    path('preview_model/', homepage_views.preview_model),
+    path('simulate_model/', homepage_views.simulate_model),
     path('admin/', admin.site.urls),
 ]

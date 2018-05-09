@@ -1,0 +1,73 @@
+freq = 1250:1550:50
+speed = 340
+rho = 2.9
+n_set: 166
+v_set: 440
+f_set: 1029
+face_near_n: 1029
+face_near_v: 1029
+ring_1_v: 166
+ring_1_n: 166
+ring_1_f: 166
+f_type: 1029 hard: 208 inlet: 45 outlet: 45 inner: 731
+n_type: 166 hard: 87 inlet: 32 outlet: 32 inner: 15
+Build matrix ...
+The SparseMatrix is 800 * 332
+  inner part : ###########
+  hard wall part : ###########
+  inlet part : ###########
+  outlet part : ###########
+A = 332*332
+solver.compute() finish
+solver.solve() finish
+freq = 1250 input_energy = 0.00767639 inlet_energy = 0.00605688 outlet_energy = 0.00723234 tl = 1.0614
+Build matrix ...
+The SparseMatrix is 800 * 332
+  inner part : ###########
+  hard wall part : ###########
+  inlet part : ###########
+  outlet part : ###########
+A = 332*332
+solver.compute() finish
+solver.solve() finish
+freq = 1300 input_energy = 0.00767639 inlet_energy = 0.00629803 outlet_energy = 0.00722213 tl = 1.0629
+Build matrix ...
+The SparseMatrix is 800 * 332
+  inner part : ###########
+  hard wall part : ###########
+  inlet part : ###########
+  outlet part : ###########
+A = 332*332
+solver.compute() finish
+solver.solve() finish
+freq = 1350 input_energy = 0.00767639 inlet_energy = 0.00657067 outlet_energy = 0.0072154 tl = 1.06389
+Build matrix ...
+The SparseMatrix is 800 * 332
+  inner part : ###########
+  hard wall part : ###########
+  inlet part : ###########
+  outlet part : ###########
+A = 332*332
+solver.compute() finish
+solver.solve() finish
+freq = 1400 input_energy = 0.00767639 inlet_energy = 0.00686729 outlet_energy = 0.00721246 tl = 1.06432
+Build matrix ...
+The SparseMatrix is 800 * 332
+  inner part : ###########
+  hard wall part : ###########
+  inlet part : ###########
+  outlet part : ###########
+A = 332*332
+solver.compute() finish
+solver.solve() finish
+freq = 1450 input_energy = 0.00767639 inlet_energy = 0.00717881 outlet_energy = 0.00721355 tl = 1.06416
+Build matrix ...
+The SparseMatrix is 800 * 332
+  inner part : ###########
+  hard wall part : ###########
+  inlet part : ###########
+  outlet part : ###########
+A = 332*332
+solver.compute() finish
+solver.solve() finish
+freq = 1500 input_energy = 0.00767639 inlet_energy = 0.00749482 outlet_energy = 0.00721884 tl = 1.06338

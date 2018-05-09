@@ -7,14 +7,9 @@
 
 #include <Eigen/SparseCholesky>
 #include <Eigen/SparseLU>
-#include <GenEigsSolver.h>
-#include <MatOp/SparseGenMatProd.h>
-#include <SymEigsShiftSolver.h>
-#include <MatOp/SparseSymShiftSolve.h>
 
 using namespace std;
 using namespace Eigen;
-using namespace Spectra;
 
 void CoeffMatrix::compute_eq_num(const vector<ElementType>& f_type, const vector<ElementType>& n_type) {
 
@@ -117,19 +112,6 @@ void CoeffMatrix::solve(vector<VectorXd>& x) {
 #ifdef LOG
   cout << "A = " << A.rows() << "*" << A.cols() << endl;
 #endif
-  /*#ifdef TEST
-    SparseGenMatProd<double> op(A); // SparseGenMatProd SparseSymShiftSolve
-    GenEigsSolver<double, SMALLEST_MAGN, SparseGenMatProd<double>> eigs(&op, 1, 3); // GenEigsSolver SymEigsShiftSolver
-
-    eigs.init();
-    int nconv = eigs.compute();
-
-    if(eigs.info() == SUCCESSFUL) {
-    cout << "Eigenvalues found:\n" << eigs.eigenvalues() << endl;
-    } else {
-    cout << "Eigenvalues didn't find " << eigs.info() << endl;
-    }
-    #endif*/
   
   SimplicialLDLT<SparseMatrix<double>> solver;
   solver.compute(A);

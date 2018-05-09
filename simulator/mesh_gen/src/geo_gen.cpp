@@ -1,8 +1,11 @@
 #include <fstream>
 #include <iostream>
+#include <vector>
 #include <string>
 
 using namespace std;
+
+const int MAX_BUFFER_LEN = 256;
 
 const int WHOLE_CHAMBER = 0;
 const int LEFT_IN_CHAMBER = 1;
@@ -61,39 +64,47 @@ int main(int argc, char* argv[]) {
 
   init(output);
 
+  string command;
+  char buffer[256];
+
   int chamber_num = 0;
-  double total_length = 0;
-  input >> chamber_num;
-  for (int i = 0; i < chamber_num; i++) {
-    int flag = 0;
-    input >> flag;
-    switch (flag) {
-    case WHOLE_CHAMBER: {
-      double x, z, radius, length;
-      input >> x >> z >> radius >> length;
-      drawWholeChamber(output, i, x, z, radius, length, total_length);
-      total_length += length;
+  vector<double> chamber_radius;
+  vector<double> chamber_length;
+  double max_mesh_size;
+  while(1) {
+    input >> command;
+    if (command == "chamber_num:") {
+      input >> chamber_num;
+    } else if (command == "chamber_radius:") {
+      for (int i=0; i<chamber_num; i++) {
+	double radius;
+	input >> radius;
+	chamber_radius.push_back(radius);
+      }
+    } else if (command == "chamber_length:") {
+      for (int i=0; i<chamber_num; i++) {
+	double length;
+	input >> length;
+	chamber_length.push_back(length);
+      }
+    } else if (command == "max_mesh_size:") {
+      input >> max_mesh_size;
+    } else if (command == "freq_start:" || command == "freq_end:" || command == "freq_step:" || command == "speed:" || command == "rho:" || command == "p0_real:" || command == "p0_imag:") {
+      input.getline(buffer, MAX_BUFFER_LEN); // ignore
+    } else if (command == "#") {
+      input.getline(buffer, MAX_BUFFER_LEN); // ignore
+    } else if (command == "end") {
       break;
-    }
-    case LEFT_IN_CHAMBER: {
-      
-      break;
-    }
-    case RIGHT_IN_CHAMBER: {
-
-      break;
-    }
-    case BOTH_IN_CHAMBER: {
-
-      break;
-    }
-    default:
-      break;
+    } else {
+      cout << "geo_gen: config format error" << endl;
     }
   }
 
-  double max_mesh_size;
-  input >> max_mesh_size;
-  
+  double total_length = 0;
+  for (int i = 0; i < chamber_num; i++) {
+    drawWholeChamber(output, i, 0, 0, chamber_radius[i], chamber_length[i], total_length);
+    total_length += chamber_length[i];
+  }
+
   finish(output, chamber_num, max_mesh_size);
 }

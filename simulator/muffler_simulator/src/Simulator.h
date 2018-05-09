@@ -24,9 +24,7 @@ private:
 
   Plain inlet, outlet;
 
-  int test_num;
-  std::vector<double> inlet_v, outlet_v;
-
+  int test_num = 1;
   double p0_real, p0_imag;
 
   // model parameter

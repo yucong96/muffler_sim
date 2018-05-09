@@ -18,6 +18,93 @@ document.getElementById('control-container').style.width = (window_width - width
 document.getElementById('control-container').style.height = window_height.toString() + 'px';
 
 
+// Below are parameter part
+
+var parameters_data = [{
+    'name':'Mesh_size',
+    'min_value':0.008,
+    'max_value':0.02,
+    'step':0.001,
+    'default_value':0.01
+},{
+    'name':'Density',
+    'min_value':0.5,
+    'max_value':4.0,
+    'step':0.01,
+    'default_value':2.9
+},{ 
+    'name':'Speed',
+    'min_value':200,
+    'max_value':1000,
+    'step':1,
+    'default_value':340   
+},{
+    'name':'Freq_start',
+    'min_value':50,
+    'max_value':3000,
+    'step':50,
+    'default_value':500
+},{
+    'name':'Freq_end',
+    'min_value':50,
+    'max_value':3000,
+    'step':50,
+    'default_value':1550
+},{
+    'name':'Freq_step',
+    'min_value':10,
+    'max_value':100,
+    'step':1,
+    'default_value':50
+},];
+var parameters_value = {}
+
+function get_parameter_html(parameter) {
+    var parameter_html = '' +
+	'<div class="row">' +
+	'  <div class="col-sm-4">' +
+	'    <h3>' + parameter['name'] + '</h3>' + 
+	'  </div>' + 
+	'  <div class="col-sm-8"  style="margin-top:13px">' +
+	'    <input id="slider-' + parameter['name'] + '"' +
+	'      data-slider-id="slider-' + parameter['name'] + '" type="text" ' +
+	'      data-slider-min="' + parameter['min_value'].toString() + '"' +
+	'      data-slider-max="' + parameter['max_value'].toString() + '"' +
+	'      data-slider-step="' + parameter['step'].toString() + '"' +
+	'      data-slider-value="' + parameter['default_value'].toString() + '"' +
+	'    />' + 
+	'  </div>' +
+	'</div>';
+    return parameter_html;
+}
+
+function init_parameters() {
+    // init parameters_value
+    for (var i=0; i<parameters_data.length; i++) {
+	parameters_value[parameters_data[i]['name']] = 0;
+    }
+    // init '#parameter-ctrl-panel'
+    var html = '';
+    for (var i=0; i<parameters_data.length; i++) {
+	html += get_parameter_html(parameters_data[i]);
+    }
+    $('#parameter-ctrl-panel').html(html);
+    // init parameter sliders
+    for (var i=0; i<parameters_data.length; i++) {
+	$('#slider-' + parameters_data[i]['name']).slider({
+	    formatter: function(value) {
+		var id = $(this).attr('id');
+		var strs = id.split('-');
+		var name = strs[strs.length-1];
+		parameters_value[name] = value;
+		return value;
+	    }
+	});
+    }
+}
+
+
+// Below are chamber part
 
 var chamber_data = [];
 var max_mesh_size = 0.01;
@@ -116,6 +203,7 @@ function update_chamber_data() {
 	init_chamber_ctrl_click();
     }); 
 }
+
 function init_chamber_ctrl_click() {
     $(document).ready(function() {
 	$('.chamber-ctrl-btn').click(function() {
@@ -136,19 +224,21 @@ function init_chamber_ctrl_click() {
     });
 }
 
-function init_apply_click() {
+
+// Below are click part
+
+function init_preview_click() {
     $(document).ready(function() {
-	$('#apply-btn').click(function() {
-	    upload_model();
-	    //update_model();
+	$('#preview-btn').click(function() {
+	    upload_model(); 
 	});
     });
 }
 
 function upload_model() {
     var post_data = {};
-    post_data['chamber'] = chamber_data;
-    post_data['max_mesh_size'] = max_mesh_size;
+    post_data['chambers'] = chamber_data;
+    post_data['parameters'] = parameters_value;
     $.post('upload_model/', JSON.stringify(post_data), upload_model_callback);
 }
 
@@ -162,25 +252,85 @@ function upload_model_callback(data) {
     }
 }
 
+function init_apply_click() {
+    $('#simulate-btn').click(function() {
+	simulate_model();
+    });
+}
+
+function simulate_model() {
+    var post_data = {};
+    post_data['chambers'] = chamber_data;
+    post_data['parameters'] = parameters_value;
+    $.post('simulate_model/', JSON.stringify(post_data), simulate_model_callback);
+}
+
+function simulate_model_callback(data) {
+    if (data['result'] == 'success') {
+	var freq_tl = data['freq_tl'];
+	freq_tl_data = []
+	for (var freq_str in freq_tl) {
+	    tl_str = freq_tl[freq_str];
+	    freq = parseInt(freq_str);
+	    tl = parseFloat(tl_str);
+	    freq_tl_data.push([freq, tl])
+	}
+	chart.series[0].setData(freq_tl_data);
+    } else {
+	alert('Simulate Failed');
+    }
+}
 
 
+// Below are chart part
+
+var chart;
+function init_chart() {
+    chart = Highcharts.chart('function', {
+        chart: {
+            type: 'spline'
+        },
+        title: {
+            text: 'Transition Loss of Muffler Under Different Frequency'
+        },
+        xAxis: {
+	    title: {
+		text: 'Frequency (Hz)'
+            },
+	    type: 'linear'
+        },
+        yAxis: {
+	    title: {
+		text: 'Transition Loss (dB)'
+	    },
+	    type: 'linear'
+	},
+	plotOptions: {
+            series: {
+		cursor: 'pointer',
+		point: {
+                    events: {
+			click: function () {
+                            alert('Frequency: ' + this.x + ', TL: ' + this.y);
+			}
+                    }
+		}
+            }
+	},
+        series: [{
+            name: 'muffler',
+            data: [[0, 0], [1, 1], [2, 0], [3, 1], [4, 0]]
+	}]
+    });
+}
 
 
-
-
-
-
-
-
-
-
-
+// Below are Three.js part
 
 var scene;
 function init_scene() {
     scene = new THREE.Scene();
 }
-
 
 var camera;
 function init_camera() {
@@ -190,14 +340,12 @@ function init_camera() {
     scene.add(camera);
 }
 
-
 var renderer;
 function init_renderer() {
     renderer = new THREE.WebGLRenderer();
     renderer.setSize(width, height);
     document.getElementById('canvas').appendChild(renderer.domElement);
 }
-
 
 var light;
 function init_light() {
@@ -208,7 +356,6 @@ function init_light() {
     //camera.add(light);
     //camera.add(light.target);
 }
-
 
 var material;
 var loader = new THREE.VTKLoader();
@@ -231,7 +378,6 @@ function update_model(input_file) {
     init_model(input_file);
 }
 
-
 var controls;
 function init_controls() {
     controls = new THREE.TrackballControls(camera);
@@ -242,7 +388,6 @@ function init_controls() {
     controls.dynamicDampingFactor = 0.3;
     controls.addEventListener('change', render);
 }
-
 
 function render() {
     renderer.render(scene, camera);
@@ -264,10 +409,11 @@ function draw() {
     animate();
 }
 
-
 function onload() {
+    init_parameters();
     init_chamber_data();
-    init_other_sliders();
+    init_preview_click();
     init_apply_click();
+    init_chart();
     draw();
 }

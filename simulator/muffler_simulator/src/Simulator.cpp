@@ -6,7 +6,7 @@ using namespace std;
 using namespace Eigen;
 
 void Simulator::load_model(const string model_file) {
-  err = vtk_io.getData(model_file, n_set, v_set);
+  err = vtk_io.getData(model_file + ".vtk", n_set, v_set);
   checkError("loading model");
 
   n_num = n_set.rows();
@@ -38,9 +38,8 @@ void Simulator::setup_data() {
 }
 
 void Simulator::load_config(const string config_file) {
-  err = config_reader.loadConfig(config_file, freq_start, freq_end, freq_step,
-                                 speed, rho, inlet, outlet, test_num, inlet_v,
-                                 outlet_v, p0_real, p0_imag);
+  err = config_reader.loadConfig(config_file + ".txt", freq_start, freq_end, freq_step,
+                                 speed, rho, inlet, outlet, p0_real, p0_imag);
   checkError("loading config");
 
 #ifdef LOG
@@ -48,18 +47,6 @@ void Simulator::load_config(const string config_file) {
        << endl;
   cout << "speed = " << speed << endl;
   cout << "rho = " << rho << endl;
-  cout << "inlet_v: ";
-  if (test_num >= 2) {
-    for (int i = 0; i < test_num; i++) {
-      cout << inlet_v[i] << " ";
-    }
-    cout << endl;
-    cout << "outlet_v: ";
-    for (int i = 0; i < test_num; i++) {
-      cout << outlet_v[i] << " ";
-    }
-    cout << endl;
-  }
 #endif
 }
 
@@ -364,7 +351,7 @@ void Simulator::post_process(const string output_model_file) {
          << "D=" << D << " " << endl;
 #endif
 
-#ifdef TEST
+#ifdef DELETE
     if (test_num > 2) {
       for (int i = 2; i < test_num; i++) {
         double p_i = 0, p_o = 0;
@@ -423,10 +410,10 @@ void Simulator::post_process(const string output_model_file) {
        << " tl = " << tl << endl;
   
   for (int i = 0; i < test_num; i++) {
-    err = vtk_io.writeData(output_model_file + "_real_" + to_string(freq) + ".vtk",
+    err = vtk_io.writeData(output_model_file + "_real_" + to_string(int(freq)) + ".vtk",
 			   n_set, v_set, result[i], REAL);
     checkError("writing output model");
-    err = vtk_io.writeData(output_model_file + "_imag_" + to_string(freq) + ".vtk",
+    err = vtk_io.writeData(output_model_file + "_imag_" + to_string(int(freq)) + ".vtk",
 			   n_set, v_set, result[i], IMAG);
     checkError("writing output model");
   }
