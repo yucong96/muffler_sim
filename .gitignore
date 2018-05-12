@@ -4,7 +4,7 @@ db.sqlite3
 __pycache__/
 ng.ini
 ngmesh.ini
-homepage/static/model
+homepage/static/model/
 simulator/muffler_simulator/build/
 simulator/muffler_simulator/tet/
 simulator/muffler_simulator/log/
@@ -18,8 +18,13 @@ simulator/mesh_gen/geo/*.*
 simulator/mesh_gen/vol/*.*
 !simulator/mesh_gen/vol/this_is_vol_file
 simulator/mesh_gen.old/
-simulator/result/model/*.vtk
-simulator/result/clip/*.vtk
-simulator/result/surf/*.vtk
+simulator/result/model/*.*
+!simulator/result/model/this_is_model_file
+simulator/result/clip/*.*
+!simulator/result/clip/this_is_clip_file
+simulator/result/surf/*.*
+!simulator/result/clip/this_is_surf_file
 simulator/config/*.*
 simulator/mesh/*.*
+tf_trainer/model_method3/
+tf_trainer/log*.*
