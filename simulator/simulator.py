@@ -1,6 +1,15 @@
 
 import os
 from simulator.result import log_analyzor
+from simulator.result import vtk2json
+
+
+RESULT_MODEL_PATH = 'simulator/result/model'
+RESULT_SURF_PATH = 'simulator/result/surf'
+RESULT_CLIP_PATH = 'simulator/result/clip'
+EXTRACT_SURFACE_PATH = 'simulator/extract_surface'
+HOMEPAGE_STATIC_PATH = 'homepage/static/model'
+
 
 def write_model_config(data_set):
     with open('./simulator/mesh_gen/geo_config/muffler.txt', 'w') as geo_config_file:
@@ -17,6 +26,7 @@ def pre_extract_surface(model_name):
     output_file = '/static/model/' + model_name + '_pre_surf.vtk'
     os.system('cp simulator/extract_surface/pre_surf/' + model_name + '.vtk homepage' + output_file)
     return output_file
+
 
 
 def write_muffler_config(data, model_name):
@@ -50,6 +60,9 @@ def write_muffler_config(data, model_name):
         f.write('p0_imag: 0\n\n')
         f.write('end')
 
+def mesh_gen(model_name):
+    os.system('simulator/mesh_gen/mesh_gen.sh ' + model_name)
+        
 def run_sim(model_name):
     os.system('simulator/muffler_simulator/run.sh ' + model_name)
 
@@ -57,11 +70,22 @@ def get_sim_result(model_name):
     json = log_analyzor.convert_log_to_json(model_name)
     return json
 
-def cp2homepage(model_name):
-    file_list = os.listdir('simulator/result')
+def extract_surf(model_path, surf_path, clip_path):
+    os.system('pvpython ' + EXTRACT_SURFACE_PATH + '/extract_surface.py extract_pure_surf ' + model_path + ' ' + surf_path)
+    os.system('pvpython ' + EXTRACT_SURFACE_PATH + '/extract_surface.py extract_clip_surf ' + model_path + ' ' + clip_path)
+    
+
+def post_process(model_name):
+    file_list = os.listdir(RESULT_MODEL_PATH)
     for f in file_list:
-        file_name = f.split('.')
-        if file_name[0].split('_')[0] == model_name and file_name[len(file_name)-1] == 'vtk':
-            file_path = os.path.join('simulator/result', f)
-            tartget_path = os.path.join('homepage/static/model', f)
-            os.system('cp ' + file_path + ' ' + tartget_path)
+        basename = f.split('.')[0]
+        postfix = f.split('.')[-1]
+        if basename.split('_')[0] == model_name and postfix == 'vtk':
+            model_path = os.path.join(RESULT_MODEL_PATH, f)
+            surf_path = os.path.join(RESULT_SURF_PATH, f)
+            clip_path = os.path.join(RESULT_CLIP_PATH, f)
+            surf_json_path = os.path.join(HOMEPAGE_STATIC_PATH, basename + '_surf.json')
+            clip_json_path = os.path.join(HOMEPAGE_STATIC_PATH, basename + '_clip.json')
+            extract_surf(model_path, surf_path, clip_path)
+            vtk2json.vtk2json(surf_path, surf_json_path)
+            vtk2json.vtk2json(clip_path, clip_json_path)

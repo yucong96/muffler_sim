@@ -32,7 +32,8 @@ def simulate_model(request):
         sim.write_muffler_config(data, model_name)
         sim.run_sim(model_name)
         freq_tl = sim.get_sim_result(model_name)
-        sim.cp2homepage(model_name)
+        # post_process: extract_surf, vtk2json, cp2homepage
+        sim.post_process(model_name)
         reply['result'] = 'success'
         reply['freq_tl'] = freq_tl
         return HttpResponse(json.dumps(reply), content_type='application/json')

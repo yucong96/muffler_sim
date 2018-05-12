@@ -14,8 +14,12 @@ simulator/extract_surface/pre_surf/
 simulator/extract_surface/coutour_surf
 simulator/extract_surface/clip_surf
 simulator/mesh_gen/geo/*.*
+!simulator/mesh_gen/geo/this_is_geo_file
 simulator/mesh_gen/vol/*.*
+!simulator/mesh_gen/vol/this_is_vol_file
 simulator/mesh_gen.old/
-simulator/result/*.vtk
+simulator/result/model/*.vtk
+simulator/result/clip/*.vtk
+simulator/result/surf/*.vtk
 simulator/config/*.*
 simulator/mesh/*.*

@@ -25,7 +25,7 @@ var parameters_data = [{
     'min_value':0.008,
     'max_value':0.02,
     'step':0.001,
-    'default_value':0.01
+    'default_value':0.02
 },{
     'name':'Density',
     'min_value':0.5,
@@ -43,7 +43,7 @@ var parameters_data = [{
     'min_value':50,
     'max_value':3000,
     'step':50,
-    'default_value':500
+    'default_value':1400
 },{
     'name':'Freq_end',
     'min_value':50,
@@ -230,25 +230,24 @@ function init_chamber_ctrl_click() {
 function init_preview_click() {
     $(document).ready(function() {
 	$('#preview-btn').click(function() {
-	    upload_model(); 
+	    preview_model(); 
 	});
     });
 }
 
-function upload_model() {
+function preview_model() {
     var post_data = {};
     post_data['chambers'] = chamber_data;
     post_data['parameters'] = parameters_value;
-    $.post('upload_model/', JSON.stringify(post_data), upload_model_callback);
+    $.post('preview_model/', JSON.stringify(post_data), preview_model_callback);
 }
 
-function upload_model_callback(data) {
+function preview_model_callback(data) {
     if (data['result'] == 'success') {
-	alert('Upload Success');
 	surf_file = data['surf-file'];
 	update_model(surf_file);
     } else {
-	alert('Upload Fail');
+	alert('Preview Fail');
     }
 }
 
@@ -330,6 +329,7 @@ function init_chart() {
 var scene;
 function init_scene() {
     scene = new THREE.Scene();
+    scene.background = new THREE.Color( 0xffffff );
 }
 
 var camera;
@@ -358,19 +358,37 @@ function init_light() {
 }
 
 var material;
-var loader = new THREE.VTKLoader();
+var loader = new THREE.BufferGeometryLoader();
 var mesh;
 function init_model(input_file) {
-    material = new THREE.MeshLambertMaterial({color : 0xffffff, side : THREE.DoubleSide, wireframe:true});
-    loader.load(input_file, function(geometry) {
-	geometry.center();
-	geometry.computeVertexNormals();
+    material = new THREE.MeshLambertMaterial({
+	side: THREE.DoubleSide,
+	color: 0xF5F5F5,
+	vertexColors: THREE.VertexColors
+    });
 
+    loader.load(input_file, function(geometry) {
+	geometry.computeVertexNormals();
+	geometry.normalizeNormals();
+	
+	var lutColors = []
+
+	lookup_table = new THREE.Lut('rainbow', 512);
+	lookup_table.setMax(1);
+	lookup_table.setMin(0);
+	for (var i=0; i<geometry.attributes.value.array.length; i++) {
+	    var colorValue = geometry.attributes.value.array[i];
+	    var color = lookup_table.getColor(colorValue);
+	    lutColors[3*i  ] = color.r;
+	    lutColors[3*i+1] = color.g;
+	    lutColors[3*i+2] = color.b;
+	}
+	geometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(lutColors), 3));
+	
 	mesh = new THREE.Mesh(geometry, material);
 	mesh.position.set(0, 0, 0);
-	mesh.scale.multiplyScalar(0.4);
+	mesh.scale.multiplyScalar(1);
 	scene.add(mesh);
-
     });
 }
 function update_model(input_file) {
@@ -386,7 +404,6 @@ function init_controls() {
     controls.panSpeed = 0.8;
     controls.staticMoving = true;
     controls.dynamicDampingFactor = 0.3;
-    controls.addEventListener('change', render);
 }
 
 function render() {
@@ -404,7 +421,8 @@ function draw() {
     init_camera();
     init_renderer();
     init_light();
-    init_model('static/model/surface.vtk');
+    init_model('static/model/muffler_imag_1400_surf.json');
+    //init_model('static/model/surface.vtk');
     init_controls();
     animate();
 }
