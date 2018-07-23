@@ -1,20 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title></title>
-    <style>canvas { width: 100%; height: 100% }</style>
-    <link rel="stylesheet" href="/static/css/bootstrap.css">
-    <link rel="stylesheet" href="/static/css/highcharts.css">
-    <link rel="stylesheet" href="/static/css/bootstrap-slider.css">
-    <script src="/static/js/three.js"></script>
-    <script src="/static/js/Lut.js"></script>
-    <script src="/static/js/TrackballControls.js"></script>
-    <script src="/static/js/jquery.min.js"></script>
-    <script src="/static/js/bootstrap.js"></script>
-    <script src="/static/js/bootstrap-slider.js"></script>
-    <script src="/static/js/highcharts.js"></script>
+  <!--title>Muffler Simulation</title-->
+  <title>消声器仿真</title>
+  <style>canvas { width: 100%; height: 100% }</style>
+  <META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate">
+  <link rel="stylesheet" href="/static/css/bootstrap.css">
+  <link rel="stylesheet" href="/static/css/highcharts.css">
+  <link rel="stylesheet" href="/static/css/bootstrap-slider.css">
+  <script src="/static/js/three.js"></script>
+  <script src="/static/js/Lut.js"></script>
+  <script src="/static/js/TrackballControls.js"></script>
+  <script src="/static/js/VTKLoader.js"></script>
+  <script src="/static/js/jquery.min.js"></script>
+  <script src="/static/js/bootstrap.js"></script>
+  <script src="/static/js/bootstrap-slider.js"></script>
+  <script src="/static/js/highcharts.js"></script>
 </head>
 <body onload="onload()">
+  <div class="modal fade" id="url-modal" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+	<div class="modal-header">
+	  <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+	    &times;
+	  </button>
+	  <h4 class="modal-title" id="myModalLabel">
+	    Result
+	  </h4>
+	</div>
+	<div class="modal-body" id="url-modal-body">
+	    Please get the result from the URL below:
+	</div>
+	<div class="modal-footer">
+	  <button type="button" id="url-modal-ok-btn" class="btn btn-default" data-dismiss="modal">
+	    OK
+	  </button>
+	</div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+  </div>
   <div class="container" id="whole-container" style="padding-right:0px;padding-left:0px;margin-left:0px;margin-right:0px;">
     <div class="row" style="">
       <div class="col-sm-9">
@@ -31,19 +56,25 @@
       </div>
       <div class="col-sm-3">
 	<div class="container" id="control-container">
-	  <div class="row" style="margin-top:17px">
+	  <!--div class="row" style="margin-top:17px">
             <div class="btn-group btn-group-lg">
 	      <button type="button" class="btn btn-default">SIMULATION</button>
 	      <button type="button" class="btn btn-default">INVERSE ENGINEERING</button>
 	    </div>
-	  </div>
+	  </div-->
 	  <div id="parameter-ctrl-panel"></div>
 	  <div id="chamber-ctrl-panel"></div>
 	  <div class="row">
-	    <button id="preview-btn" type="button" class="btn btn-default btn-block">PREVIEW</button>
+	    <!--button id="preview-btn" type="button" class="btn btn-default btn-block">PREVIEW</button-->
+	    <button id="preview-btn" type="button" class="btn btn-default btn-block"><h3>模型预览</h3></button>
+	  </div>
+	  <div class="row">
+	    <!--button id="quick-sim-btn" type="button" class="btn btn-default btn-block">QUICK SIMULATE</button-->
+	    <button id="quick-sim-btn" type="button" class="btn btn-default btn-block"><h3>快速仿真</h3></button>
 	  </div>
           <div class="row">
-	    <button id="simulate-btn" type="button" class="btn btn-default btn-block">SIMULATE</button>
+	    <!--button id="simulate-btn" type="button" class="btn btn-default btn-block">SIMULATE</button-->
+	    <button id="simulate-btn" type="button" class="btn btn-default btn-block"><h3>有限元仿真</h3></button>
 	  </div>
 	</div>  
       </div>

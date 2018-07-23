@@ -67,11 +67,15 @@ def json_encode(json_file_path, data):
         f.write('                "itemSize": 3,\n')
         f.write('                "type": "Float32Array",\n')
         f.write('                "array": [\n')
-        for connection in connections:
+        for conn_index in range(len(connections)):
+            connection = connections[conn_index]
             for i in range(3):
                 f.write('                    ')
                 for j in range(3):
-                    f.write(str(points[connection[i]][j]) + ', ')
+                    if conn_index == len(connections)-1 and i == 2 and j == 2:
+                        f.write(str(points[connection[i]][j]))
+                    else:
+                        f.write(str(points[connection[i]][j]) + ', ')
                 f.write('\n')
         f.write('                ]\n')
         f.write('            },\n')
@@ -79,10 +83,14 @@ def json_encode(json_file_path, data):
         f.write('                "itemSize": 3,\n')
         f.write('                "type": "Float32Array",\n')
         f.write('                "array": [\n')
-        for connection in connections:
+        for conn_index in range(len(connections)):
+            connection = connections[conn_index]
             for i in range(3):
                 f.write('                    ')
-                f.write(str(values[connection[i]]) + ', ')
+                if conn_index == len(connections)-1 and i == 2:
+                    f.write(str(values[connection[i]]))
+                else:
+                    f.write(str(values[connection[i]]) + ', ')
                 f.write('\n')
         f.write('                ]\n')
         f.write('            }\n')

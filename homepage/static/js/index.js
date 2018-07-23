@@ -110,8 +110,8 @@ var chamber_data = [];
 var max_mesh_size = 0.01;
 function get_default_copy() {
     var data = {};
-    data['radius'] = 0.05;
-    data['length'] = 0.1;
+    data['radius'] = 0.02;
+    data['length'] = 0.05;
     return data;
 }
 
@@ -183,7 +183,7 @@ function update_chamber_data() {
 		'    <h4>Radius</h4>' +
 		'  </div>' +
 		'  <div class="col-sm-8" style="margin-top:13px">' +
-		'    <input id="slider-radius-' + i.toString() + '" data-slider-id="slider-radius-' + i.toString() + '" type="text" data-slider-min="0.01" data-slider-max="0.3" data-slider-step="0.01" data-slider-value="' + chamber_data[i-1]['radius'] + '"/>' +
+		'    <input id="slider-radius-' + i.toString() + '" data-slider-id="slider-radius-' + i.toString() + '" type="text" data-slider-min="0.01" data-slider-max="0.06" data-slider-step="0.001" data-slider-value="' + chamber_data[i-1]['radius'] + '"/>' +
 		'  </div>' +
 		'</div>';
 	    var chamber_length_html = '' +
@@ -192,7 +192,7 @@ function update_chamber_data() {
 		'    <h4>Length</h4>' +
 		'  </div>' +
 		'  <div class="col-sm-8" style="margin-top:13px">' +
-		'    <input id="slider-length-' + i.toString() + '" data-slider-id="slider-length-' + i.toString() + '" type="text" data-slider-min="0.01" data-slider-max="0.5" data-slider-step="0.01" data-slider-value="' + chamber_data[i-1]['length'] + '"/>' +
+		'    <input id="slider-length-' + i.toString() + '" data-slider-id="slider-length-' + i.toString() + '" type="text" data-slider-min="0.01" data-slider-max="0.15" data-slider-step="0.001" data-slider-value="' + chamber_data[i-1]['length'] + '"/>' +
 		'  </div>' +
 		'</div>';
 	    html += chamber_title_html + chamber_radius_html + chamber_length_html;
@@ -227,6 +227,17 @@ function init_chamber_ctrl_click() {
 
 // Below are click part
 
+function chart_setdata(freq_tl) {
+    freq_tl_data = []
+    for (var freq_str in freq_tl) {
+	tl_str = freq_tl[freq_str];
+	freq = parseInt(freq_str);
+	tl = parseFloat(tl_str);
+	freq_tl_data.push([freq, tl])
+    }
+    chart.series[0].setData(freq_tl_data);
+}
+
 function init_preview_click() {
     $(document).ready(function() {
 	$('#preview-btn').click(function() {
@@ -245,13 +256,13 @@ function preview_model() {
 function preview_model_callback(data) {
     if (data['result'] == 'success') {
 	surf_file = data['surf-file'];
-	update_model(surf_file);
+	update_model(surf_file, 'vtk');
     } else {
 	alert('Preview Fail');
     }
 }
 
-function init_apply_click() {
+function init_simulate_click() {
     $('#simulate-btn').click(function() {
 	simulate_model();
     });
@@ -280,6 +291,26 @@ function simulate_model_callback(data) {
     }
 }
 
+function init_quick_sim_click() {
+    $('#quick-sim-btn').click(function() {
+	quick_sim_model();
+    });
+}
+
+function quick_sim_model() {
+    var post_data = {};
+    post_data['chambers'] = chamber_data;
+    post_data['parameters'] = parameters_value;
+    $.post('quick_sim_model/', JSON.stringify(post_data), quick_sim_model_callback);
+}
+
+function quick_sim_model_callback(data) {
+    if (data['result'] == 'success') {
+	chart_setdata(data['freq_tl']);
+    } else {
+	alert('Quick Simulation Failed!');
+    }
+}
 
 // Below are chart part
 
@@ -287,15 +318,15 @@ var chart;
 function init_chart() {
     chart = Highcharts.chart('function', {
         chart: {
-            type: 'spline'
+	    type: 'spline'
         },
         title: {
-            text: 'Transition Loss of Muffler Under Different Frequency'
+	    text: 'Transition Loss of Muffler Under Different Frequency'
         },
         xAxis: {
 	    title: {
 		text: 'Frequency (Hz)'
-            },
+	    },
 	    type: 'linear'
         },
         yAxis: {
@@ -305,20 +336,20 @@ function init_chart() {
 	    type: 'linear'
 	},
 	plotOptions: {
-            series: {
+	    series: {
 		cursor: 'pointer',
 		point: {
-                    events: {
+		    events: {
 			click: function () {
-                            alert('Frequency: ' + this.x + ', TL: ' + this.y);
+			    alert('Frequency: ' + this.x + ', TL: ' + this.y);
 			}
-                    }
+		    }
 		}
-            }
+	    }
 	},
         series: [{
-            name: 'muffler',
-            data: [[0, 0], [1, 1], [2, 0], [3, 1], [4, 0]]
+	    name: 'muffler',
+	    data: [[0, 0], [1, 1], [2, 0], [3, 1], [4, 0]]
 	}]
     });
 }
@@ -357,43 +388,63 @@ function init_light() {
     //camera.add(light.target);
 }
 
+var loader;
 var material;
-var loader = new THREE.BufferGeometryLoader();
 var mesh;
-function init_model(input_file) {
-    material = new THREE.MeshLambertMaterial({
-	side: THREE.DoubleSide,
-	color: 0xF5F5F5,
-	vertexColors: THREE.VertexColors
-    });
+function init_model(input_file, type) {
 
-    loader.load(input_file, function(geometry) {
-	geometry.computeVertexNormals();
-	geometry.normalizeNormals();
-	
-	var lutColors = []
+    if (type == 'json') {
+	material = new THREE.MeshLambertMaterial({
+	    side: THREE.DoubleSide,
+	    color: 0xF5F5F5,
+	    vertexColors: THREE.VertexColors
+	});
 
-	lookup_table = new THREE.Lut('rainbow', 512);
-	lookup_table.setMax(1);
-	lookup_table.setMin(0);
-	for (var i=0; i<geometry.attributes.value.array.length; i++) {
-	    var colorValue = geometry.attributes.value.array[i];
-	    var color = lookup_table.getColor(colorValue);
-	    lutColors[3*i  ] = color.r;
-	    lutColors[3*i+1] = color.g;
-	    lutColors[3*i+2] = color.b;
-	}
-	geometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(lutColors), 3));
+	loader = new THREE.BufferGeometryLoader();
+	loader.load(input_file, function(geometry) {
+	    geometry.computeVertexNormals();
+	    geometry.normalizeNormals();
+	    
+	    var lutColors = []
+
+	    lookup_table = new THREE.Lut('rainbow', 512);
+	    lookup_table.setMax(1);
+	    lookup_table.setMin(0);
+	    for (var i=0; i<geometry.attributes.value.array.length; i++) {
+		var colorValue = geometry.attributes.value.array[i];
+		var color = lookup_table.getColor(colorValue);
+		lutColors[3*i  ] = color.r;
+		lutColors[3*i+1] = color.g;
+		lutColors[3*i+2] = color.b;
+	    }
+	    geometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(lutColors), 3));
+	    
+	    mesh = new THREE.Mesh(geometry, material);
+	    mesh.position.set(0, 0, 0);
+	    mesh.scale.multiplyScalar(1); 
+	    scene.add(mesh); 
+	}); 
+    }
+
+    if (type == 'vtk') {
+	material = new THREE.MeshLambertMaterial({
+	    side: THREE.DoubleSide,
+	    color: 0xF5F5F5,
+	    wireframe: true
+	});
 	
-	mesh = new THREE.Mesh(geometry, material);
-	mesh.position.set(0, 0, 0);
-	mesh.scale.multiplyScalar(1);
-	scene.add(mesh);
-    });
+	loader = new THREE.VTKLoader();
+	loader.load(input_file, function(geometry) {
+	    geometry.computeVertexNormals();
+	    
+	    mesh = new THREE.Mesh( geometry, material );
+	    scene.add( mesh );
+	}); 
+    }
 }
-function update_model(input_file) {
+function update_model(input_file, type) {
     scene.remove(mesh);
-    init_model(input_file);
+    init_model(input_file, type);
 }
 
 var controls;
@@ -421,7 +472,7 @@ function draw() {
     init_camera();
     init_renderer();
     init_light();
-    init_model('static/model/muffler_imag_1400_surf.json');
+    init_model('static/model/muffler_imag_1400_surf.json', 'json');
     //init_model('static/model/surface.vtk');
     init_controls();
     animate();
@@ -431,7 +482,8 @@ function onload() {
     init_parameters();
     init_chamber_data();
     init_preview_click();
-    init_apply_click();
+    init_quick_sim_click();
+    init_simulate_click();
     init_chart();
     draw();
 }

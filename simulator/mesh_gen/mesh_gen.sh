@@ -1,19 +1,26 @@
 #!/bin/bash
 
-PROJECT_PATH=/home/jchen/Documents/project/project_test/django/muffler_sim
+MESHGEN_DIR=${1}
+MODEL_NAME=${2}
+MODEL_CONFIG_PATH=${PROJECT_DIR}/${3}
+MODEL_GEO_PATH=${PROJECT_DIR}/${MESHGEN_DIR}geo/${MODEL_NAME}.geo
+MODEL_VOL_PATH=${PROJECT_DIR}/${MESHGEN_DIR}vol/${MODEL_NAME}.vol
+MODEL_MESH_PATH=${PROJECT_DIR}/${4}
 
-CONFIG_PATH=${PROJECT_PATH}/simulator/config
-MESH_PATH=${PROJECT_PATH}/simulator/mesh
-MESHGEN_PATH=${PROJECT_PATH}/simulator/mesh_gen
+mkdir ${MESHGEN_DIR}geo/
+mkdir ${MESHGEN_DIR}vol/
 
-MODEL_NAME=${1}
-GEO_CONFIG_PATH=${CONFIG_PATH}/${MODEL_NAME}.txt
-GEO_PATH=${MESHGEN_PATH}/geo/${MODEL_NAME}.geo
-VOL_PATH=${MESHGEN_PATH}/vol/${MODEL_NAME}.vol
-VTK_PATH=${MESH_PATH}/${MODEL_NAME}.vtk
+#CONFIG_PATH=${PROJECT_PATH}/simulator/config
+#MESH_PATH=${PROJECT_PATH}/simulator/mesh
+#MESHGEN_PATH=${PROJECT_PATH}/simulator/mesh_gen
 
-echo ${GEO_CONFIG_PATH}
-${MESHGEN_PATH}/geo_gen ${GEO_CONFIG_PATH} ${GEO_PATH}
-netgen -geofile=${GEO_PATH} -meshfile=${VOL_PATH} -batchmode
-${MESHGEN_PATH}/vol2vtk ${VOL_PATH} ${VTK_PATH}
+#MODEL_NAME=${1}
+#GEO_CONFIG_PATH=${CONFIG_PATH}/${MODEL_NAME}.txt
+#GEO_PATH=${MESHGEN_PATH}/geo/${MODEL_NAME}.geo
+#VOL_PATH=${MESHGEN_PATH}/vol/${MODEL_NAME}.vol
+#VTK_PATH=${MESH_PATH}/${MODEL_NAME}.vtk
+
+${MESHGEN_DIR}geo_gen ${MODEL_CONFIG_PATH} ${MODEL_GEO_PATH}
+netgen -geofile=${MODEL_GEO_PATH} -meshfile=${MODEL_VOL_PATH} -batchmode
+${MESHGEN_DIR}vol2vtk ${MODEL_VOL_PATH} ${MODEL_MESH_PATH}
 

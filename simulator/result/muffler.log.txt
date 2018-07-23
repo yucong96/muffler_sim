@@ -1,0 +1,23 @@
+freq = 2100:2101:50
+speed = 340
+rho = 2.9
+n_set: 369
+v_set: 1167
+f_set: 2632
+face_near_n: 2632
+face_near_v: 2632
+ring_1_v: 369
+ring_1_n: 369
+ring_1_f: 369
+f_type: 2632 hard: 542 inlet: 27 outlet: 27 inner: 2036
+n_type: 369 hard: 258 inlet: 21 outlet: 21 inner: 69
+Build matrix ...
+The SparseMatrix is 1846 * 738
+  inner part : ###########
+  hard wall part : ###########
+  inlet part : ###########
+  outlet part : ###########
+A = 738*738
+solver.compute() finish
+solver.solve() finish
+freq = 2100 input_energy = 0.00120827 inlet_energy = 0.00118919 outlet_energy = 0.000276842 tl = 4.36447
