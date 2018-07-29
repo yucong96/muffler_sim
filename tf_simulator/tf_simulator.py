@@ -1,4 +1,6 @@
 
+import sys
+
 from tf_simulator import tf_model
 
 PROJECT_DIR = '/home/scallion/Documents/project/project_active/muffler_sim/'
@@ -32,7 +34,7 @@ def tensorflow_predict(data, model_name, test_flag=False):
     if test_flag == False:
         freq_tl = tf_model.predict(batches_data, TF_LOG_PATH, TF_MODEL_PATH)
     else:
-        freq_tl = tf_model.predict(batches_data, '../tf_simulator/log/muffler.txt', TF_MODEL_PATH)
+        freq_tl = tf_model.predict(batches_data, TF_LOG_PATH, TF_MODEL_PATH)
     for freq in freq_tl:
         tl = float(freq_tl[freq])
         freq_tl[freq] = str(10*tl)

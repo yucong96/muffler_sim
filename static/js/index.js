@@ -47,14 +47,14 @@ var parameters_data = [{
     'min_value':50,
     'max_value':3000,
     'step':50,
-    'default_value':1400
+    'default_value':500
 },{
     'name':'Freq_end',
     'name-CN':'终止频率',
     'min_value':50,
     'max_value':3000,
     'step':50,
-    'default_value':1550
+    'default_value':2000
 },{
     'name':'Freq_step',
     'name-CN':'频率步长',
@@ -95,7 +95,7 @@ function get_parameter_html(parameter) {
 	'    <h3>' + parameter['name-CN'] + '</h3>' + 
 	'  </div>' + 
 	'  <div class="col-sm-8"  style="margin-top:13px">' +
-	'    <input id="slider-' + parameter['name'] + '"' +
+	'    <input id="slider-' + parameter['name'] + '-input"' +
 	'      data-slider-id="slider-' + parameter['name'] + '" type="text" ' +
 	'      data-slider-min="' + parameter['min_value'].toString() + '"' +
 	'      data-slider-max="' + parameter['max_value'].toString() + '"' +
@@ -120,7 +120,7 @@ function init_parameters() {
     $('#parameter-ctrl-panel').html(html);
     // init parameter sliders
     for (var i=0; i<parameters_data.length; i++) {
-	$('#slider-' + parameters_data[i]['name']).slider({
+	$('#slider-' + parameters_data[i]['name'] + '-input').slider({
 	    formatter: function(value) {
 		var id = $(this).attr('id');
 		var strs = id.split('-');
@@ -257,17 +257,32 @@ function init_chamber_ctrl_click() {
 // Below are click part
 
 const skyblue = '#47DAFF'
+const red = '#FF0000'
 var freq_tl_data = [];
 var freq_tl_data_index;
+var freq_tl_target_data = [];
 function chart_setdata(freq_tl) {
-    freq_tl_data = []
+    freq_tl_data = [];
     for (var freq_str in freq_tl) {
-	tl_str = freq_tl[freq_str];
-	freq = parseInt(freq_str);
-	tl = parseFloat(tl_str);
+	var tl_str = freq_tl[freq_str];
+	var freq = parseInt(freq_str);
+	var tl = parseFloat(tl_str);
 	freq_tl_data.push({x:freq, y:tl, color:skyblue})
     }
     chart.series[0].setData(freq_tl_data);
+}
+function chart_setnewdata(freq_tl) {
+    console.log(freq_tl);
+    freq_tl_target_data = []
+    for (var i=0; i<freq_tl.length; i++) {
+	var freq_str = freq_tl[i]['freq'];
+	var tl_str = freq_tl[i]['tl'];
+	var freq = parseInt(freq_str);
+	var tl = parseFloat(tl_str);
+	freq_tl_target_data.push({x:freq, y:tl, color:red})
+    }
+    console.log(freq_tl_target_data);
+    chart.series[1].setData(freq_tl_target_data);
 }
 
 function init_preview_click() {
@@ -336,9 +351,32 @@ function simulate_model_callback(data) {
     }
 }
 
-function init_modal_url() {
+function init_modal() {
     $('#url-modal').on('hidden.bs.modal', function() {
 	enable_controls();
+    });
+    $('#inverse-modal').on('hidden.bs.modal', function() {
+	enable_controls();
+    });
+    function str2json(freq_tl_str) {
+	var freq_tl_json = [];
+	var strings = freq_tl_str.split('\n');
+	for (var i=0; i<strings.length; i++) {
+	    if (strings[i].length > 10) {
+		var freq_str = strings[i].split('\t ')[0].split(':')[1];
+		var tl_str = strings[i].split('\t ')[1].split(':')[1];
+		var freq_tl = {}
+		freq_tl['freq'] = freq_str;
+		freq_tl['tl'] = tl_str;
+		freq_tl_json.push(freq_tl);
+	    }
+	}
+	return freq_tl_json;
+    }
+    $('#inverse-modal-ok-btn').click(function() {
+	var freq_tl = str2json($('#inverse-modal-form').val());
+	chart_setnewdata(freq_tl);
+	$.post('inverse_sim/', JSON.stringify(freq_tl), inverse_sim_callback);
     });
 }
 
@@ -393,11 +431,11 @@ function single_sim(freq) {
 
 function single_sim_callback(data) {
     if (data['result'] == 'success') {
-	var freq = freq_tl_data[freq_tl_data_index]['x'].toString();
-	var tl = parseFloat(data['freq_tl'][freq]);
-	freq_tl_data[freq_tl_data_index]['color'] = '#FF0000';
-	freq_tl_data[freq_tl_data_index]['y'] = tl;
-	chart.series[0].setData(freq_tl_data);
+	// var freq = freq_tl_data[freq_tl_data_index]['x'].toString();
+	// var tl = parseFloat(data['freq_tl'][freq]);
+	// freq_tl_data[freq_tl_data_index]['color'] = '#FF0000';
+	// freq_tl_data[freq_tl_data_index]['y'] = tl;
+	// chart.series[0].setData(freq_tl_data);
 	
 	update_model(data['json-file']['real-surf'], 'json');
     } else {
@@ -405,6 +443,31 @@ function single_sim_callback(data) {
     }    
 }
 
+function init_inverse_click() {
+    $('#inverse-btn').click(function() {
+	disable_controls();
+	$('#inverse-modal-form').attr('rows', freq_tl_data.length.toString());
+	var html = '';
+	for (var i=0; i<freq_tl_data.length; i++) {
+	    html += 'freq:' + freq_tl_data[i].x.toString() + '\t tl:' + freq_tl_data[i].y.toFixed(5).toString() + '\n'; 
+	}
+	$('#inverse-modal-form').val(html);
+	$('#inverse-modal').modal('show');
+    });
+}
+
+function inverse_sim_callback(data) {
+    if (data['result'] == 'success') {
+	fit_chamber = data['fit-chamber'];
+	$('#slider-Chamber_radius-input').slider('setValue', fit_chamber['radius'].toFixed(3));
+	$('#slider-Chamber_length-input').slider('setValue', fit_chamber['length'].toFixed(3));
+	preview_model();
+	quick_sim_model();
+	alert('The most suitable chamber is \nradius:' + fit_chamber['radius'].toFixed(3).toString() + ' length:' + fit_chamber['length'].toFixed(3).toString());
+    } else {
+	alert('Inverse Failed');
+    }
+}
 // Below are chart part
 
 var chart;
@@ -415,7 +478,7 @@ function init_chart() {
 	},
 	title: {
 	    // text: 'Transition Loss of Muffler Under Different Frequency'
-            text: '不同频率下的消声器传输损耗'
+	    text: '不同频率下的消声器传输损耗'
 	},
 	xAxis: {
 	    title: {
@@ -446,10 +509,14 @@ function init_chart() {
 	},
 	series: [{
 	    // name: 'muffler',
-            name: '消声器',
+	    name: '消声器',
 	    data: [{x:0, y:0, color:skyblue}, {x:1, y:1, color:skyblue}, {x:2, y:0, color:skyblue}, {x:3, y:1, color:skyblue},  {x:4, y:0, color:skyblue}],
 	    color: skyblue,
 	    lineWidth: 4
+	}, {
+	    name: '目标函数', 
+	    data: [],
+	    color: red
 	}]
     });
 }
@@ -592,7 +659,9 @@ function draw() {
     init_camera();
     init_renderer();
     init_light();
-    init_model('static/model/bunny.vtk', 'vtk');
+    // init_model('static/model/bunny.vtk', 'vtk');
+    preview_model();
+    quick_sim_model();
     init_controls();
     animate();
 }
@@ -603,7 +672,8 @@ function onload() {
     init_preview_click();
     init_quick_sim_click();
     init_simulate_click();
-    init_modal_url();
+    init_inverse_click();
+    init_modal();
     init_chart();
     draw();
 }

@@ -4,10 +4,10 @@ import print_status
 import add_job
 
 PROJECT_DIR = '/home/scallion/Documents/project/project_active/muffler_sim/'
-CONFIG_DIR = PROJECT_DIR + 'docker_simulator/config.temp/'
+CONFIG_DIR = PROJECT_DIR + 'docker_simulator/config/'
 POOL_DIR = PROJECT_DIR + 'docker_simulator/pool/'
 TOKEN_PATH = PROJECT_DIR + 'docker_simulator/pool_token.txt'
-EMPTY_DATA_PATH = PROJECT_DIR + 'docker_simulator/config.temp/empty_data.txt'
+EMPTY_DATA_PATH = PROJECT_DIR + 'docker_simulator/config/empty_data.txt'
 
 def get_token(token_path):
     with open(token_path, 'r') as f:

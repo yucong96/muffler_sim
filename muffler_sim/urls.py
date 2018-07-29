@@ -24,5 +24,6 @@ urlpatterns = [
     path('simulate_model/', homepage_views.simulate_model),
     path('single_sim/', homepage_views.single_sim),
     path('result/', homepage_views.result),
+    path('inverse_sim/', homepage_views.inverse_sim),
     path('admin/', admin.site.urls),
 ]

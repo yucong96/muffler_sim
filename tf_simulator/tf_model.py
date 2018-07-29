@@ -75,6 +75,8 @@ def nn(mode,
         if predict_data == None or model_log_file == None or nn_model_file == None:
             return 'error'
 
+    tf.reset_default_graph()
+        
     input_num = 3
     output_num = 1
     h1_num = 100
