@@ -92,6 +92,8 @@ def result(request):
             response['Content-Disposition'] = 'attachment; filename=' + os.path.basename(smart_str(result_path)) + '.zip'
             return response
 
+
+database_tf = {}
         
 def inverse_sim(request):
     reply = {}
@@ -106,7 +108,11 @@ def inverse_sim(request):
 
 
 def inverse_sim_func(target):
-    database_tf = load_database_tf()
+    global database_tf
+    if len(database_tf) == 0:
+        print(sys.stderr, 'load database')
+        database_tf = load_database_tf()
+    
     fit_chamber = {}
     min_error = 1e10
     for data in database_tf:

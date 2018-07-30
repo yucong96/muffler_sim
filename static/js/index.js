@@ -17,16 +17,26 @@ document.getElementById('control-container').style.paddingLeft = padding;
 document.getElementById('control-container').style.width = (window_width - width - 2*padding).toString() + 'px';
 document.getElementById('control-container').style.height = window_height.toString() + 'px';
 
+var time = 0;
+function check_time() {
+    var time_d = new Date();
+    var time_now = time_d.getTime();
+    if (time_now > time + 1000) {
+	time = time_now;
+	return true;
+    } 
+    return false;
+}
 
 // Below are parameter part
 
 var parameters_data = [{
-    'name':'Mesh_size',
-    'name-CN':'模型粒度',
-    'min_value':0.008,
-    'max_value':0.02,
-    'step':0.001,
-    'default_value':0.02
+    'name':'Speed',
+    'name-CN':'声波速度',
+    'min_value':339.9,
+    'max_value':340.1,
+    'step':0.1,
+    'default_value':340    
 },{
     'name':'Density',
     'name-CN':'空气密度',
@@ -35,12 +45,12 @@ var parameters_data = [{
     'step':0.001,
     'default_value':2.9
 },{ 
-    'name':'Speed',
-    'name-CN':'声波速度',
-    'min_value':339.9,
-    'max_value':340.1,
-    'step':0.1,
-    'default_value':340   
+    'name':'Mesh_size',
+    'name-CN':'计算精度',
+    'min_value':0.008,
+    'max_value':0.02,
+    'step':0.001,
+    'default_value':0.02
 },{
     'name':'Freq_start',
     'name-CN':'起始频率',
@@ -110,28 +120,39 @@ function get_parameter_html(parameter) {
 function init_parameters() {
     // init parameters_value
     for (var i=0; i<parameters_data.length; i++) {
-	parameters_value[parameters_data[i]['name']] = 0;
+	parameters_value[parameters_data[i]['name']] = parameters_data[i]['default_value'];
     }
     // init '#parameter-ctrl-panel'
     var html = '';
     for (var i=0; i<parameters_data.length; i++) {
-	html += get_parameter_html(parameters_data[i]);
+	if (parameters_data[i]['name'] != 'Speed' && parameters_data[i]['name'] != 'Density' && parameters_data[i]['name'] != 'Mesh_size') {
+	    html += get_parameter_html(parameters_data[i]);
+	}
     }
     $('#parameter-ctrl-panel').html(html);
     // init parameter sliders
     for (var i=0; i<parameters_data.length; i++) {
-	$('#slider-' + parameters_data[i]['name'] + '-input').slider({
-	    formatter: function(value) {
-		var id = $(this).attr('id');
-		var strs = id.split('-');
-		var name = strs[strs.length-1];
-		parameters_value[name] = value;
-		return value;
-	    }
-	});
+	if (parameters_data[i]['name'] != 'Speed' && parameters_data[i]['name'] != 'Density' && parameters_data[i]['name'] != 'Mesh_size') {
+	    $('#slider-' + parameters_data[i]['name'] + '-input').slider({
+		formatter: function(value) {
+		    var id = $(this).attr('id');
+		    var strs = id.split('-');
+		    var name = strs[strs.length-1];
+		    parameters_value[name] = value;
+		    return value;
+		} 
+	    });
+	}
     }
 }
 
+function check_parameters() {
+    if (parameters_value['Freq_start'] >= parameters_value['Freq_end']) {
+	alert('起始频率应小于终止频率');
+	return false;
+    }
+    return true;
+}
 
 // Below are chamber part
 
@@ -272,7 +293,6 @@ function chart_setdata(freq_tl) {
     chart.series[0].setData(freq_tl_data);
 }
 function chart_setnewdata(freq_tl) {
-    console.log(freq_tl);
     freq_tl_target_data = []
     for (var i=0; i<freq_tl.length; i++) {
 	var freq_str = freq_tl[i]['freq'];
@@ -281,7 +301,6 @@ function chart_setnewdata(freq_tl) {
 	var tl = parseFloat(tl_str);
 	freq_tl_target_data.push({x:freq, y:tl, color:red})
     }
-    console.log(freq_tl_target_data);
     chart.series[1].setData(freq_tl_target_data);
 }
 
@@ -320,7 +339,9 @@ function preview_model_callback(data) {
 
 function init_simulate_click() {
     $('#simulate-btn').click(function() {
-	simulate_model();
+	if (check_parameters() && check_time()) {
+	    simulate_model();
+	}
     });
 }
 
@@ -363,9 +384,28 @@ function init_modal() {
 	var strings = freq_tl_str.split('\n');
 	for (var i=0; i<strings.length; i++) {
 	    if (strings[i].length > 10) {
-		var freq_str = strings[i].split('\t ')[0].split(':')[1];
-		var tl_str = strings[i].split('\t ')[1].split(':')[1];
-		var freq_tl = {}
+
+		var string_split = strings[i].split('\t ');
+		if (string_split.length != 2) return [];
+		
+		var freq_str_array = string_split[0].split(':');
+		if (freq_str_array.length != 2) return [];
+		var freq_str = freq_str_array[1];
+		var tl_str_array = string_split[1].split(':');
+		if (tl_str_array.length != 2) return [];
+		var tl_str = tl_str_array[1];
+
+		if (isNaN(freq_str) || isNaN(tl_str)) {
+		    return [];
+		} else {
+		    var freq = parseInt(freq_str);
+		    var expected_freq = parameters_value['Freq_start'] + parameters_value['Freq_step'] * i;
+		    if (Math.abs(freq - expected_freq) > 5) {
+			return []; 
+		    }
+		}
+
+		var freq_tl = {};
 		freq_tl['freq'] = freq_str;
 		freq_tl['tl'] = tl_str;
 		freq_tl_json.push(freq_tl);
@@ -375,6 +415,10 @@ function init_modal() {
     }
     $('#inverse-modal-ok-btn').click(function() {
 	var freq_tl = str2json($('#inverse-modal-form').val());
+	if (freq_tl.length != freq_tl_data.length) {
+	    alert('请检查输入框内语法是否正确\n（每行格式："freq:xxx\t tl:xxx\n"；且频率应和滑动条参数保持一致）');
+	    return;
+	}
 	chart_setnewdata(freq_tl);
 	$.post('inverse_sim/', JSON.stringify(freq_tl), inverse_sim_callback);
     });
@@ -382,11 +426,14 @@ function init_modal() {
 
 function init_quick_sim_click() {
     $('#quick-sim-btn').click(function() {
-	quick_sim_model();
+	if (check_parameters() && check_time()) {
+	    quick_sim_model();
+	}
     });
 }
 
 function quick_sim_model() {
+
     var post_data = {};
     // newly added
     chamber_data = [];
@@ -445,14 +492,16 @@ function single_sim_callback(data) {
 
 function init_inverse_click() {
     $('#inverse-btn').click(function() {
-	disable_controls();
-	$('#inverse-modal-form').attr('rows', freq_tl_data.length.toString());
-	var html = '';
-	for (var i=0; i<freq_tl_data.length; i++) {
-	    html += 'freq:' + freq_tl_data[i].x.toString() + '\t tl:' + freq_tl_data[i].y.toFixed(5).toString() + '\n'; 
+	if (check_parameters() && check_time()) {
+	    disable_controls();
+	    $('#inverse-modal-form').attr('rows', freq_tl_data.length.toString());
+	    var html = '';
+	    for (var i=0; i<freq_tl_data.length; i++) {
+		html += 'freq:' + freq_tl_data[i].x.toString() + '\t tl:' + freq_tl_data[i].y.toFixed(5).toString() + '\n'; 
+	    }
+	    $('#inverse-modal-form').val(html);
+	    $('#inverse-modal').modal('show');
 	}
-	$('#inverse-modal-form').val(html);
-	$('#inverse-modal').modal('show');
     });
 }
 
@@ -509,7 +558,7 @@ function init_chart() {
 	},
 	series: [{
 	    // name: 'muffler',
-	    name: '消声器',
+	    name: '传输损耗',
 	    data: [{x:0, y:0, color:skyblue}, {x:1, y:1, color:skyblue}, {x:2, y:0, color:skyblue}, {x:3, y:1, color:skyblue},  {x:4, y:0, color:skyblue}],
 	    color: skyblue,
 	    lineWidth: 4
@@ -521,159 +570,162 @@ function init_chart() {
     });
 }
 
+
 function chart_click(point) {
-    var freq = point.x;
-    freq_tl_data_index = point.index;
-    single_sim(freq);
-}
-
-// Below are Three.js part
-
-var scene;
-function init_scene() {
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color( 0xffffff );
-}
-
-var camera;
-function init_camera() {
-    camera = new THREE.PerspectiveCamera(75, width / height, 0.01, 10);
-    camera.position.z = 0.2;
-    camera.lookAt(new THREE.Vector3(0, 0, 0));
-    scene.add(camera);
-}
-
-var renderer;
-function init_renderer() {
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize(width, height);
-    document.getElementById('canvas').appendChild(renderer.domElement);
-}
-
-var light;
-function init_light() {
-    var ambient_light = new THREE.AmbientLight("#8c8c8c");
-    scene.add(ambient_light);
-    light = new THREE.DirectionalLight(0xffffff);
-    light.position.set(200, 200, 1000).normalize();
-    //camera.add(light);
-    //camera.add(light.target);
-}
-
-var loader;
-var material;
-var mesh;
-function init_model(input_file, type) {
-
-    if (type == 'json') {
-	material = new THREE.MeshLambertMaterial({
-	    side: THREE.DoubleSide,
-	    color: 0xF5F5F5,
-	    vertexColors: THREE.VertexColors
-	});
-
-	loader = new THREE.BufferGeometryLoader();
-	loader.load(input_file, function(geometry) {
-	    geometry.computeVertexNormals();
-	    geometry.normalizeNormals();	
-	    geometry.computeBoundingBox();
-	    var bounding = geometry.boundingBox;
-	    
-	    var lutColors = []
-
-	    lookup_table = new THREE.Lut('cooltowarm', 512);
-	    lookup_table.setMax(1);
-	    lookup_table.setMin(0);
-	    for (var i=0; i<geometry.attributes.value.array.length; i++) {
-		var colorValue = geometry.attributes.value.array[i];
-		var color = lookup_table.getColor(colorValue);
-		lutColors[3*i  ] = color.r;
-		lutColors[3*i+1] = color.g;
-		lutColors[3*i+2] = color.b;
-	    }
-	    geometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(lutColors), 3));
-	    
-	    mesh = new THREE.Mesh(geometry, material);	
-	    mesh.position.x = -(bounding.min.x + bounding.max.x)/2;
-	    mesh.position.y = -(bounding.min.y + bounding.max.y)/2;
-	    mesh.position.z = -(bounding.min.z + bounding.max.z)/2;
-	    mesh.scale.multiplyScalar(1); 
-	    scene.add(mesh); 
-	}); 
-    }
-
-    if (type == 'vtk') {
-	material = new THREE.MeshLambertMaterial({
-	    side: THREE.DoubleSide,
-	    color: 0xF5F5F5,
-	    wireframe: true
-	});
-	
-	loader = new THREE.VTKLoader();
-	loader.load(input_file, function(geometry) {
-	    geometry.computeVertexNormals();
-	    geometry.computeBoundingBox();
-	    var bounding = geometry.boundingBox;
-	    
-	    mesh = new THREE.Mesh( geometry, material );
-	    mesh.position.x = -(bounding.min.x + bounding.max.x)/2;
-	    mesh.position.y = -(bounding.min.y + bounding.max.y)/2;
-	    mesh.position.z = -(bounding.min.z + bounding.max.z)/2;
-	    scene.add( mesh );
-	}); 
+    if (check_time()) {
+	var freq = point.x;
+	freq_tl_data_index = point.index;
+	single_sim(freq);
     }
 }
-function update_model(input_file, type) {
-    scene.remove(mesh);
-    init_model(input_file, type);
-}
 
-var controls;
-function init_controls() {
-    controls = new THREE.TrackballControls(camera);
-    controls.rotateSpeed = 5;
-    controls.zoomSpeed = 3;
-    controls.panSpeed = 0.8;
-    controls.staticMoving = true;
-    controls.dynamicDampingFactor = 0.3;
-}
-function disable_controls() {
-    controls.enabled = false; 
-}
-function enable_controls() {
-    controls.enabled = true;
-}
+    // Below are Three.js part
 
-function render() {
-    renderer.render(scene, camera);
-}
+    var scene;
+    function init_scene() {
+	scene = new THREE.Scene();
+	scene.background = new THREE.Color( 0xffffff );
+    }
 
-function animate() {
-    controls.update();
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
-}
+    var camera;
+    function init_camera() {
+	camera = new THREE.PerspectiveCamera(75, width / height, 0.01, 10);
+	camera.position.z = 0.2;
+	camera.lookAt(new THREE.Vector3(0, 0, 0));
+	scene.add(camera);
+    }
 
-function draw() {
-    init_scene();
-    init_camera();
-    init_renderer();
-    init_light();
-    // init_model('static/model/bunny.vtk', 'vtk');
-    preview_model();
-    quick_sim_model();
-    init_controls();
-    animate();
-}
+    var renderer;
+    function init_renderer() {
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(width, height);
+	document.getElementById('canvas').appendChild(renderer.domElement);
+    }
 
-function onload() {
-    init_parameters();
-    // init_chamber_data();
-    init_preview_click();
-    init_quick_sim_click();
-    init_simulate_click();
-    init_inverse_click();
-    init_modal();
-    init_chart();
-    draw();
-}
+    var light;
+    function init_light() {
+	var ambient_light = new THREE.AmbientLight("#8c8c8c");
+	scene.add(ambient_light);
+	light = new THREE.DirectionalLight(0xffffff);
+	light.position.set(200, 200, 1000).normalize();
+	//camera.add(light);
+	//camera.add(light.target);
+    }
+
+    var loader;
+    var material;
+    var mesh;
+    function init_model(input_file, type) {
+
+	if (type == 'json') {
+	    material = new THREE.MeshLambertMaterial({
+		side: THREE.DoubleSide,
+		color: 0xF5F5F5,
+		vertexColors: THREE.VertexColors
+	    });
+
+	    loader = new THREE.BufferGeometryLoader();
+	    loader.load(input_file, function(geometry) {
+		geometry.computeVertexNormals();
+		geometry.normalizeNormals();	
+		geometry.computeBoundingBox();
+		var bounding = geometry.boundingBox;
+		
+		var lutColors = []
+
+		lookup_table = new THREE.Lut('cooltowarm', 512);
+		lookup_table.setMax(1);
+		lookup_table.setMin(0);
+		for (var i=0; i<geometry.attributes.value.array.length; i++) {
+		    var colorValue = geometry.attributes.value.array[i];
+		    var color = lookup_table.getColor(colorValue);
+		    lutColors[3*i  ] = color.r;
+		    lutColors[3*i+1] = color.g;
+		    lutColors[3*i+2] = color.b;
+		}
+		geometry.addAttribute('color', new THREE.BufferAttribute(new Float32Array(lutColors), 3));
+		
+		mesh = new THREE.Mesh(geometry, material);	
+		mesh.position.x = -(bounding.min.x + bounding.max.x)/2;
+		mesh.position.y = -(bounding.min.y + bounding.max.y)/2;
+		mesh.position.z = -(bounding.min.z + bounding.max.z)/2;
+		mesh.scale.multiplyScalar(1); 
+		scene.add(mesh); 
+	    }); 
+	}
+
+	if (type == 'vtk') {
+	    material = new THREE.MeshLambertMaterial({
+		side: THREE.DoubleSide,
+		color: 0xF5F5F5,
+		wireframe: true
+	    });
+	    
+	    loader = new THREE.VTKLoader();
+	    loader.load(input_file, function(geometry) {
+		geometry.computeVertexNormals();
+		geometry.computeBoundingBox();
+		var bounding = geometry.boundingBox;
+		
+		mesh = new THREE.Mesh( geometry, material );
+		mesh.position.x = -(bounding.min.x + bounding.max.x)/2;
+		mesh.position.y = -(bounding.min.y + bounding.max.y)/2;
+		mesh.position.z = -(bounding.min.z + bounding.max.z)/2;
+		scene.add( mesh );
+	    }); 
+	}
+    }
+    function update_model(input_file, type) {
+	scene.remove(mesh);
+	init_model(input_file, type);
+    }
+
+    var controls;
+    function init_controls() {
+	controls = new THREE.TrackballControls(camera);
+	controls.rotateSpeed = 5;
+	controls.zoomSpeed = 3;
+	controls.panSpeed = 0.8;
+	controls.staticMoving = true;
+	controls.dynamicDampingFactor = 0.3;
+    }
+    function disable_controls() {
+	controls.enabled = false; 
+    }
+    function enable_controls() {
+	controls.enabled = true;
+    }
+
+    function render() {
+	renderer.render(scene, camera);
+    }
+
+    function animate() {
+	controls.update();
+	requestAnimationFrame(animate);
+	renderer.render(scene, camera);
+    }
+
+    function draw() {
+	init_scene();
+	init_camera();
+	init_renderer();
+	init_light();
+	// init_model('static/model/bunny.vtk', 'vtk');
+	preview_model();
+	quick_sim_model();
+	init_controls();
+	animate();
+    }
+
+    function onload() {
+	init_parameters();
+	// init_chamber_data();
+	init_preview_click();
+	init_quick_sim_click();
+	init_simulate_click();
+	init_inverse_click();
+	init_modal();
+	init_chart();
+	draw();
+    }

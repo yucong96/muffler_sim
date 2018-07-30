@@ -19,7 +19,7 @@ def simulate(data, model_name):
     sim.write_muffler_config(data, model_config_path)
     access_token = get_token(TOKEN_PATH)
     [info, index] = add_job.add_job(POOL_DIR, EMPTY_DATA_PATH, model_config_path, access_token)
-    url = '10.76.1.116:8000' + '/result/?id=' + str(index)
+    url = '47.254.42.173:8000' + '/result/?id=' + str(index)
     return url
 
 def get_result(model_id):
